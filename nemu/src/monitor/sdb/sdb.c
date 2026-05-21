@@ -49,6 +49,7 @@ static int cmd_c(char *args) {
 
 
 static int cmd_q(char *args) {
+  nemu_state.state == NEMU_QUIT; //如果没有这一行，nemu_state没有被赋值，is_exit_status_bad()这个函数没有匹配到END或quit状态，故main最终返回为1,而返回1就会报错（约定） 
   return -1;
 }
 
