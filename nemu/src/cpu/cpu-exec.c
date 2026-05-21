@@ -71,6 +71,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
 #endif
 }
 
+//uint64_t n 传入为-1,则n为0xFFFFFFFFFFFFFFFF，即uint64_t能表示的最大值，相当于无限循环
 static void execute(uint64_t n) {
   Decode s;
   for (;n > 0; n --) {

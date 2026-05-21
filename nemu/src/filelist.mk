@@ -15,8 +15,8 @@
 
 SRCS-y += src/nemu-main.c
 DIRS-y += src/cpu src/monitor src/utils
-DIRS-$(CONFIG_MODE_SYSTEM) += src/memory
-DIRS-BLACKLIST-$(CONFIG_TARGET_AM) += src/monitor/sdb
+DIRS-$(CONFIG_MODE_SYSTEM) += src/memory #只有CONFIG_MODE_SYSTEM为y才编译
+DIRS-BLACKLIST-$(CONFIG_TARGET_AM) += src/monitor/sdb #为空正常编译，为y不编译
 
 SHARE = $(if $(CONFIG_TARGET_SHARE),1,0)
 LIBS += $(if $(CONFIG_TARGET_NATIVE_ELF),-lreadline -ldl -pie,)
