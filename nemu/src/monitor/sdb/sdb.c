@@ -18,6 +18,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
+#include <memory/vaddr.h>
 
 static int is_batch_mode = false;
 
@@ -72,7 +73,7 @@ static int cmd_info(char *args) {
   if((args != NULL) && (strcmp(args,"r") == 0)){
     isa_reg_display();
   }
-  else if((args != NULL) && (strcmp(args, "w")) == 0) {
+  else if((args != NULL) && (strcmp(args, "w") == 0)) {
 
   }
   else {
@@ -82,6 +83,35 @@ static int cmd_info(char *args) {
   return 0;
 }
 
+static int cmd_x(char *args) {
+  int n;
+  int i;
+  word_t expr;
+  char *N;
+  char *EXPR;
+  if(args == NULL) {
+    printf("Usage: x N EXPR\n");
+    return 0;
+  }
+  N = strtok(args, " ");
+  EXPR = strtok(NULL, "");
+  if(N == NULL || EXPR == NULL) {
+    printf("Usage: x N EXPR\n");
+    return 0;
+  }
+  n = atoi(N);
+  expr = strtoul(EXPR, NULL, 0);
+  if(n <= 0) {
+    printf("Usage: x N EXPR, N should be a positive integer\n");
+    return 0;
+  }
+  for(i = 0; i < n; i++){
+    word_t addr = expr + i * 4;
+    word_t data = vaddr_read(addr, 4);
+    printf(FMT_PADDR ":    " FMT_WORD " \n", addr, data);
+  }
+  return 0;
+}
 static struct {
   const char *name;
   const char *description;
@@ -90,8 +120,9 @@ static struct {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
-  { "si","single instruction N",cmd_si},
-  {"info", "Display program status",cmd_info}
+  { "si","single instruction N", cmd_si},
+  {"info", "Display program status", cmd_info},
+  {"x","examine memory", cmd_x},
   /* TODO: Add more commands */
 
 };
