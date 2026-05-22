@@ -68,6 +68,20 @@ static int cmd_si(char *args) {
   return 0;
 }
 
+static int cmd_info(char *args) {
+  if((args != NULL) && (strcmp(args,"r") == 0)){
+    isa_reg_display();
+  }
+  else if((args != NULL) && (strcmp(args, "w")) == 0) {
+
+  }
+  else {
+    printf("Usage: info SUBCMD, SUBCMD should be 'r' or 'w'\n");
+  }
+
+  return 0;
+}
+
 static struct {
   const char *name;
   const char *description;
@@ -77,6 +91,7 @@ static struct {
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
   { "si","single instruction N",cmd_si},
+  {"info", "Display program status",cmd_info}
   /* TODO: Add more commands */
 
 };
