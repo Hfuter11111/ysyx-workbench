@@ -49,11 +49,24 @@ static int cmd_c(char *args) {
 
 
 static int cmd_q(char *args) {
-  nemu_state.state == NEMU_QUIT; //如果没有这一行，nemu_state没有被赋值，is_exit_status_bad()这个函数没有匹配到END或quit状态，故main最终返回为1,而返回1就会报错（约定） 
+  nemu_state.state = NEMU_QUIT; //如果没有这一行，nemu_state没有被赋值，is_exit_status_bad()这个函数没有匹配到END或quit状态，故main最终返回为1,而返回1就会报错（约定） 
   return -1;
 }
 
 static int cmd_help(char *args);
+
+static int cmd_si(char *args) {
+  int n = 1;
+  if(args != NULL) {
+    n = atoi(args);
+    if (n <= 0) {
+      printf("Usage: si N, N should be a positive integer\n"); //输入abc类似的字符串，atoi会返回0
+      return 0;
+    }
+  }
+  cpu_exec(n);
+  return 0;
+}
 
 static struct {
   const char *name;
@@ -63,7 +76,7 @@ static struct {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
-
+  { "si","single instruction N",cmd_si},
   /* TODO: Add more commands */
 
 };
@@ -116,7 +129,7 @@ void sdb_mainloop() {
     char *args = cmd + strlen(cmd) + 1;
     if (args >= str_end) {
       args = NULL;
-    }
+    }                                          //没有输入参数的话，args要比str_end大1,故给args赋NULL
 
 #ifdef CONFIG_DEVICE
     extern void sdl_clear_event_queue();
