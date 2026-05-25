@@ -13,6 +13,7 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
+#include <cstring>
 #include <isa.h>
 
 /* We use the POSIX regex functions to process regular expressions.
@@ -21,7 +22,7 @@
 #include <regex.h>
 
 enum {
-  TK_NOTYPE = 256, TK_EQ,
+  TK_NOTYPE = 256, TK_EQ, TK_NUM
 
   /* TODO: Add more token types */
 
@@ -37,8 +38,15 @@ static struct rule {
    */
 
   {" +", TK_NOTYPE},    // spaces
-  {"\\+", '+'},         // plus
+  {"\\+", '+'},         // plus 在c语言里对应‘/’，/+在正则表达式里对应’+‘
+  {"-", '-'},           // sub
+  {"\\*", '*'},         // mul  在正则表达式里有特殊含义
+  {"/", '/'},           // div  
+  {"\\(", '('},         // '('  有特殊含义
+  {"\\)",')'},          //')'
+  {"[0-9]+", TK_NUM},   // 十进制整数
   {"==", TK_EQ},        // equal
+  
 };
 
 #define NR_REGEX ARRLEN(rules)
@@ -67,7 +75,10 @@ typedef struct token {
   char str[32];
 } Token;
 
+// 按顺序存放已经被识别出的token信息
 static Token tokens[32] __attribute__((used)) = {};
+
+//已经被识别出的token数目
 static int nr_token __attribute__((used))  = 0;
 
 static bool make_token(char *e) {
@@ -85,7 +96,7 @@ static bool make_token(char *e) {
         int substr_len = pmatch.rm_eo;
 
         Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
-            i, rules[i].regex, position, substr_len, substr_len, substr_start);
+            i, rules[i].regex, position, substr_len, substr_len, substr_start); //%。*s 从substr_start开始打印substr_len个字符
 
         position += substr_len;
 
@@ -95,7 +106,34 @@ static bool make_token(char *e) {
          */
 
         switch (rules[i].token_type) {
-          default: TODO();
+          case TK_NOTYPE: 
+            break;
+          case TK_NUM:
+
+            if(nr_token >= ARRLEN(tokens)) {
+              printf("too many tokens\n");
+              return false;
+            }
+
+            if(substr_len >= sizeof(tokens[nr_token].str)) {
+              printf("token too long: %.*s\n", substr_len, substr_start);
+              return false;
+            }
+
+            tokens[nr_token].type = rules[i].token_type;
+            strncpy(tokens[nr_token].str, substr_start, substr_len);
+            tokens[nr_token].str[substr_len] = '\0';
+            nr_token++;
+            break;
+          default:  
+          
+            if(nr_token >= ARRLEN(tokens)) {
+              printf("too many tokens\n");
+              return false;
+            }          
+            tokens[nr_token].type = rules[i].token_type;
+            nr_token++;
+            break;
         }
 
         break;
