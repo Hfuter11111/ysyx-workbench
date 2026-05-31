@@ -100,7 +100,7 @@ static int cmd_x(char *args) {
     return 0;
   }
   n = atoi(N);
-  expr = strtoul(EXPR, NULL, 0);
+  expr = strtoul(EXPR, NULL, 0);  // 自动识别十进制 八进制 十六进制
   if(n <= 0) {
     printf("Usage: x N EXPR, N should be a positive integer\n");
     return 0;
