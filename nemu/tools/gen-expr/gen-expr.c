@@ -23,6 +23,7 @@
 // this should be enough
 static char buf[65536] = {};
 static char code_buf[65536 + 128] = {}; // a little larger than `buf`
+static int buf_index = 0;
 static char *code_format =
 "#include <stdio.h>\n"
 "int main() { "
@@ -30,10 +31,50 @@ static char *code_format =
 "  printf(\"%%u\", result); "
 "  return 0; "
 "}";
+static word_t choose(word_t n) {
+  return rand() % n;
+}
+
+void gen(char c) {
+  if(buf_index < sizeof(buf) - 1) {
+    buf[buf_index] = c;
+    buf_index++;
+    buf[buf_index] = '\0';
+  }
+}
+
+void gen_num() {
+  word_t num = choose(100);
+  int len = snprintf(buf+buf_index, sizeof(buf) - buf_index, "%u", num); // 自动加'/0'，返回值为格式化后字符串长度
+  if(len > 0) {
+    buf_index += len;
+  }
+}
+
+void gen_rand_op() {
+  switch (choose(4)) {
+    case 0: gen('+'); break;
+    case 1: gen('-'); break;
+    case 2: gen('*'); break;
+    default: gen('/');
+  }
+}
+
+void gen_rand_expr() {
+  switch (choose(3)) {
+    case 0: gen_num(); break;
+    case 1: gen('('); gen_rand_expr(); gen(')'); break;
+    default: gen_rand_expr(); gen_rand_op(); gen_rand_expr(); break;
+  }
+}
 
 static void gen_rand_expr() {
-  buf[0] = '\0';
-}
+  switch (choose(3)) {
+    case 0: gen_num(); break;
+    case 1: gen('('); gen_rand_expr(); gen(')'); break;
+    default: gen_rand_expr(); gen_rand_op(); gen_rand_expr(); break;
+  }
+}gi
 
 int main(int argc, char *argv[]) {
   int seed = time(0);
