@@ -47,7 +47,8 @@ static struct rule {
   {"/", '/'},           // div  
   {"\\(", '('},         // '('  有特殊含义
   {"\\)",')'},          //')'
-  {"[0-9]+", TK_NUM},   // 十进制整数
+  {"[0-9]+u?", TK_NUM}, // 十进制整数，由于表达式生成器要保证无符号数运算(加上u表示常量是无符号数)，所以正则要可以识别u，
+                                               // 同时直接用strtoul(tokens[p].str, NULL, 10);因为从字符串开头开始，尽可能多地解析合法数字字符；一旦遇到当前进制下不合法的字符，就停止转换。
   {"==", TK_EQ},        // equal
   
 };
@@ -79,7 +80,7 @@ typedef struct token {
 } Token;
 
 // 按顺序存放已经被识别出的token信息
-static Token tokens[32] __attribute__((used)) = {};
+static Token tokens[65536] __attribute__((used)) = {};
 
 // 已经被识别出的token数目
 static int nr_token __attribute__((used))  = 0;
@@ -294,7 +295,8 @@ word_t eval(int p, int q, bool *success) {
         return val1 * val2;
       case '/': 
         // 避免除数为0
-        if(val2 == 0) {
+         if(val2 == 0) {
+          printf("Division by zero detected! val1=%u, val2=%u\n", val1, val2);
           *success = false;
           return 0;
         }
