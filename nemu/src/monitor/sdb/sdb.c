@@ -119,9 +119,9 @@ static int cmd_p(char *args) {
     return 0;
   }
 
-  bool success = true;
+  static bool success = true;
   word_t result = expr(args, &success);
-  
+
   if(success == true) {
     printf("%s: %u\n", args, result);
   } else {

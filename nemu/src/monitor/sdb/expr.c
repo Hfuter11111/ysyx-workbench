@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <isa.h>
+#include <memory/vaddr.h>
 
 /* We use the POSIX regex functions to process regular expressions.
  * Type 'man regex' for more information about POSIX regex functions.
@@ -25,7 +26,7 @@
 
 
 enum {
-  TK_NOTYPE = 256, TK_EQ, TK_NUM
+  TK_NOTYPE = 256,  TK_DEC, TK_HEX, TK_REG, TK_EQ, TK_NEQ, TK_AND, TK_DEREF
 
   /* TODO: Add more token types */
 
@@ -43,13 +44,19 @@ static struct rule {
   {" +", TK_NOTYPE},    // spaces
   {"\\+", '+'},         // plus '\\'在c语言里对应‘\’，/+在正则表达式里对应’+‘
   {"-", '-'},           // sub
-  {"\\*", '*'},         // mul  在正则表达式里有特殊含义
+  {"\\*", '*'},         // mul或指针解引用，make_token中再做区分  *在正则表达式里有特殊含义
   {"/", '/'},           // div  
   {"\\(", '('},         // '('  有特殊含义
   {"\\)",')'},          //')'
-  {"[0-9]+u?", TK_NUM}, // 十进制整数，由于表达式生成器要保证无符号数运算(加上u表示常量是无符号数)，所以正则要可以识别u，
+  {"0[xX][0-9a-fA-F]+u?", TK_HEX}, // 十六进制整数，十六进制必须放在十进制前边否则例如0x10,会被识别成十进制x10
+  {"[0-9]+u?", TK_DEC}, // 十进制整数，由于表达式生成器要保证无符号数运算(加上u表示常量是无符号数)，所以正则要可以识别u，
                                                // 同时直接用strtoul(tokens[p].str, NULL, 10);因为从字符串开头开始，尽可能多地解析合法数字字符；一旦遇到当前进制下不合法的字符，就停止转换。
-  {"==", TK_EQ},        // equal
+  {"\\$[a-zA-Z0-9]+", TK_REG}, // 寄存器
+  {"==", TK_EQ},       // equal
+  {"!=", TK_NEQ},      // no equal
+  {"&&", TK_AND},      // and
+
+  
   
 };
 
@@ -114,7 +121,10 @@ static bool make_token(char *e) {
         switch (rules[i].token_type) {
           case TK_NOTYPE: 
             break;
-          case TK_NUM:
+          // 十进制，十六进制和寄存器区分token可共用
+          case TK_DEC:
+          case TK_HEX:
+          case TK_REG:
             if(nr_token >= ARRLEN(tokens)) {
               printf("too many tokens\n");
               return false;
@@ -129,7 +139,7 @@ static bool make_token(char *e) {
             strncpy(tokens[nr_token].str, substr_start, substr_len);
             tokens[nr_token].str[substr_len] = '\0';
             nr_token++;
-            break;
+            break;                  
           default:  
             if(nr_token >= ARRLEN(tokens)) {
               printf("too many tokens\n");
@@ -139,7 +149,6 @@ static bool make_token(char *e) {
             nr_token++;
             break;
         }
-
         break;
       }
     }
@@ -204,14 +213,19 @@ static bool check_parentheses(int p, int q, bool *success) {
 // 用来确定token的优先级
 static int get_priority(int type) {
   switch(type) {
+    case TK_AND:
+      return 1;
+    case TK_EQ:
+    case TK_NEQ:
+      return 2;
     case '+': 
     case '-':
-      return 1;
+      return 3;
     case '*':
     case '/':
-      return 2;
+      return 4;
     default:
-      return 0;
+      return 0; //非双目运算符，TK_DEREF也为0,一元和二元在求值函数里是分开的，优先考虑二元为主运算符，因为二元优先级低
   }
 }
 
@@ -252,63 +266,95 @@ word_t eval(int p, int q, bool *success) {
      * For now this token should be a number.
      * Return the value of the number.
      */
-    if(tokens[p].type != TK_NUM) {
-      *success = false;
-      return 0;
+    bool reg_success = true;
+    word_t reg_result;
+    switch (tokens[p].type) {
+      case TK_DEC:
+      case TK_HEX:
+        return strtoul(tokens[p].str, NULL, 0); //自动识别
+      case TK_REG:
+        reg_result = isa_reg_str2val(tokens[p].str + 1, &reg_success); 
+        if(reg_success == true) {
+          return reg_result;
+        } else {
+          *success = false;
+          return 0;
+        }
+      default:
+        *success = false;
+        return 0;
     }
-    return strtoul(tokens[p].str, NULL, 10);
-
   }
-  else if (check_parentheses(p, q, success) == true) {
+
+  else if(check_parentheses(p, q, success) == true) {
     /* The expression is surrounded by a matched pair of parentheses.
      * If that is the case, just throw away the parentheses.
      */
     return eval(p + 1, q - 1, success);
   }
+  
   else {
     int op;
     word_t val1, val2;
-    // 如果check_parentheses()里检查出匹配错误，那么此时success是false，之间返回0
+    // 如果check_parentheses()里检查出匹配错误，那么此时success是false，直接返回0
     if(*success == false) {
       return 0;
     }
     op = find_op(p, q);
-    if(op == -1) {
-      *success = false;
-      return 0;
-    }
-    val1 = eval(p, op - 1, success);
-    // 如果val1出错就不再计算val2
-    if(*success == false)
-      return 0;
-    val2 = eval(op + 1, q, success);
-    // 如果val2出错直接返回
-    if(*success == false)
-      return 0;
+    if(op !=-1) {
+      val1 = eval(p, op - 1, success);
+      // 如果val1出错就不再计算val2
+      if(*success == false)
+        return 0;
+      val2 = eval(op + 1, q, success);
+      // 如果val2出错直接返回
+      if(*success == false)
+        return 0;
 
-    switch (tokens[op].type) {
-      case '+': 
-        return val1 + val2;
-      case '-': 
-        return val1 - val2;
-      case '*': 
-        return val1 * val2;
-      case '/': 
-        // 避免除数为0
-         if(val2 == 0) {
-          printf("Division by zero detected! val1=%u, val2=%u\n", val1, val2);
+      switch (tokens[op].type) {
+        case '+': 
+          return val1 + val2;
+        case '-': 
+          return val1 - val2;
+        case '*': 
+          return val1 * val2;
+        case '/': 
+          // 避免除数为0
+          if(val2 == 0) {
+            printf("Division by zero detected! val1=%u, val2=%u\n", val1, val2);
+            *success = false;
+            return 0;
+          }
+          return val1 / val2;
+        case TK_EQ:
+          return val1 == val2;
+        case TK_NEQ:
+          return val1 != val2;
+        case TK_AND:
+          return val1 && val2;
+        default: 
           *success = false;
           return 0;
-        }
-        return val1 / val2;
-      default: 
-        *success = false;
-        return 0;
+      }
     }
+
+    // 找不到双目运算符，再处理单目指针解引用(右结合)
+    if(tokens[p].type == TK_DEREF) {
+      word_t addr = eval(p + 1, q, success);
+      if(*success == false)
+        return 0;
+      return vaddr_read(addr, 4);
+    }
+
+    // 既不是双目表达式，也不是指针解引用表达式，说明非法
+    *success = false;
+    return 0;
   }
 }
 
 word_t expr(char *e, bool *success) {
+  *success = true;
+
   if(!make_token(e)) {
     *success = false;
     return 0;
@@ -317,6 +363,18 @@ word_t expr(char *e, bool *success) {
   if(!nr_token) {
     *success = false;
     return 0;
+  }
+  // 区分该token为*还是指针解引用，如果前边不是一个完整表达式则为指针解引用，如果前边是一个完整表达式则为*，前边token是一个十六进制或十进制或寄存器值或右括号则为完整表达式
+  for (int i = 0; i < nr_token; i++) {
+    if (tokens[i].type == '*') {
+      if (i == 0 ||
+          !(tokens[i - 1].type == TK_DEC ||
+            tokens[i - 1].type == TK_HEX ||
+            tokens[i - 1].type == TK_REG ||
+            tokens[i - 1].type == ')')) {
+        tokens[i].type = TK_DEREF;
+      }
+    }
   }
 
   return eval(0, nr_token - 1, success);

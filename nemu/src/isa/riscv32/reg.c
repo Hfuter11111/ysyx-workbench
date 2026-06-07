@@ -32,5 +32,22 @@ void isa_reg_display() {
 }
 
 word_t isa_reg_str2val(const char *s, bool *success) {
+  int i;
+  *success = true;
+  // $0 特殊解决
+  if(strcmp(s, "0") == 0) {
+    return cpu.gpr[0];
+  }
+
+  for(i = 1; i < NR_REG; i++) {
+    if(strcmp(s, regs[i]) == 0)
+      return cpu.gpr[i];
+  }
+
+  if(strcmp(s, "pc") == 0) {
+    return cpu.pc;
+  }
+
+  *success = false;
   return 0;
 }
