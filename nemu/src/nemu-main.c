@@ -74,10 +74,11 @@ int main(int argc, char *argv[]) {
   init_monitor(argc, argv);
 #endif
  
-  /* test expr*/
+  /* test expr 
   test_expr("input");
   return 0;
-  
+  */
+
   /* Start engine. */
   engine_start();
 
