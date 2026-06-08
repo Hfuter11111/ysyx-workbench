@@ -151,6 +151,12 @@ config ITRACE_COND
   string "Only trace instructions when the condition is true"
   default "true"
 
+config WATCHPOINT
+  bool "Enable watchpoint"
+  default n
+  help
+    Enable watchpoint support in the simple debugger.
+    Note that this will reduce the performance of NEMU.
 
 config DIFFTEST
   depends on TARGET_NATIVE_ELF

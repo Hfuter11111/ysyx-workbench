@@ -31,13 +31,23 @@ static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
 
 void device_update();
+bool check_watchpoints();
 
 static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 #ifdef CONFIG_ITRACE_COND
   if (ITRACE_COND) { log_write("%s\n", _this->logbuf); }
 #endif
+
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
+
+// 在Kconfig中自己添加配置，根据是否选择来决定CONFIG_WATCHPOINT是否被定义
+#ifdef CONFIG_WATCHPOINT
+  if(check_watchpoints()) {
+    nemu_state.state = NEMU_STOP;
+  }
+#endif
+
 }
 
 static void exec_once(Decode *s, vaddr_t pc) {

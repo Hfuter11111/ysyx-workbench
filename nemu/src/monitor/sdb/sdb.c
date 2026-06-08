@@ -23,7 +23,6 @@
 static int is_batch_mode = false;
 
 void init_regex();
-void init_wp_pool();
 
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
@@ -74,7 +73,7 @@ static int cmd_info(char *args) {
     isa_reg_display();
   }
   else if((args != NULL) && (strcmp(args, "w") == 0)) {
-
+    display_watchpoints();
   }
   else {
     printf("Usage: info SUBCMD, SUBCMD should be 'r' or 'w'\n");
@@ -119,14 +118,61 @@ static int cmd_p(char *args) {
     return 0;
   }
 
-  static bool success = true;
+  bool success = true;
   word_t result = expr(args, &success);
 
   if(success == true) {
-    printf("%s: %u\n", args, result);
+    printf("%s: " FMT_WORD "\n", args, result);
   } else {
     printf("Bad expression: %s\n", args);
   }
+  return 0;
+}
+
+static int cmd_w(char *args) {
+  if(args == NULL) {
+    printf("Usage: w EXPR\n");
+    return 0;
+  }
+  // 
+  bool success = true;
+  word_t result = expr(args, &success);
+
+  if(success == true) {
+    WP *wp = new_wp();
+    wp->old_value = result; // 保存当前值
+    strncpy(wp->expr_str, args, sizeof(wp->expr_str) - 1);
+    wp->expr_str[sizeof(wp->expr_str) - 1] = '\0';
+
+    printf("Watchpoint %d: %s = " FMT_WORD "\n",
+         wp->NO, wp->expr_str, wp->old_value);
+    
+  } else {
+    printf("Bad expression: %s\n", args);
+  }
+  return 0;
+}
+
+static int cmd_d(char *args) {
+  if(args == NULL) {
+    printf("Usage: d N\n");
+    return 0;
+  }
+  char *endptr = NULL;
+  int N = strtol(args, &endptr, 0);
+  // 如果输入纯字母，则输出0,可能导致误删，根据endptr是否指向字符串开头来确定是否为这种错误情况
+  if(endptr == args) {
+    printf("Usage: d N\n");
+    return 0;
+  }
+  // 在head链表中找NO=N的节点
+  WP *wp = search_wp(N);
+  if(wp == NULL) {
+    printf("No watchpoint number %d\n", N);
+    return 0;
+  }
+  free_wp(wp);
+  printf("Delete watchpoint %d\n", N);
   return 0;
 }
 
@@ -138,10 +184,12 @@ static struct {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
-  { "si","single instruction N", cmd_si},
+  { "si","Single instruction N", cmd_si},
   {"info", "Display program status", cmd_info},
-  {"x","examine memory", cmd_x},
-  {"p", "expression evaluation", cmd_p},
+  {"x", "Examine memory", cmd_x},
+  {"p", "Expression evaluation", cmd_p},
+  {"w", "Set watchpoint", cmd_w},
+  {"d", "Delect watchpoint",cmd_d},
   /* TODO: Add more commands */
 
 };
