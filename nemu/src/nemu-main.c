@@ -35,7 +35,6 @@ void test_expr(char *filename) {
   char buf[65536] = {}; // 用来存储每一行的字符
   while(fgets(buf, sizeof(buf), fp)) {
     bool success = true;
-    total++;
     // 去掉换行符
     char *p = strchr(buf, '\n');
       if (p != NULL) {
@@ -45,7 +44,8 @@ void test_expr(char *filename) {
     if (buf[0] == '\0') {
       continue;
     }
-    expected = strtoul(buf, &endptr, 10); // 保存结果,endptr指向后面未被识别的第一个字符
+    total++;
+    expected = strtoul(buf, &endptr, 10); // 保存结果,endptr指向结果后面未被识别的第一个字符
     // 去空格
     while(*endptr == ' ') {
       endptr++;
@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
   init_monitor(argc, argv);
 #endif
  
-  /* test expr 
+  /* test expr  
   test_expr("input");
   return 0;
   */

@@ -85,27 +85,41 @@ static int cmd_info(char *args) {
 static int cmd_x(char *args) {
   int n;
   int i;
-  word_t expr;
+  word_t expr_;
   char *N;
   char *EXPR;
+  bool success = true;
   if(args == NULL) {
     printf("Usage: x N EXPR\n");
     return 0;
   }
   N = strtok(args, " ");
   EXPR = strtok(NULL, "");
-  if(N == NULL || EXPR == NULL) {
+  if (N == NULL || EXPR == NULL) {
     printf("Usage: x N EXPR\n");
     return 0;
   }
+
+  while (*EXPR == ' ') EXPR++;
+
+  if (*EXPR == '\0') {
+    printf("Usage: x N EXPR\n");
+    return 0;
+  }
+
   n = atoi(N);
-  expr = strtoul(EXPR, NULL, 0);  // 自动识别十进制 八进制 十六进制
+  expr_ = expr(EXPR, &success);
+  if (success == false) {
+    printf("Bad expression: %s\n", EXPR);
+    return 0;
+  }
+  //expr_ = strtoul(EXPR, NULL, 0);  // 自动识别十进制 八进制 十六进制
   if(n <= 0) {
     printf("Usage: x N EXPR, N should be a positive integer\n");
     return 0;
   }
   for(i = 0; i < n; i++){
-    word_t addr = expr + i * 4;
+    word_t addr = expr_ + i * 4;
     word_t data = vaddr_read(addr, 4);
     printf(FMT_PADDR ":    " FMT_WORD " \n", addr, data);
   }

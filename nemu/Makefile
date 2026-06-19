@@ -62,3 +62,9 @@ else
 # Include rules to build NEMU
 include $(NEMU_HOME)/scripts/native.mk
 endif
+
+count:
+	find . | grep '\.c$$\|\.h$$' | xargs wc -l
+
+count-nonblank:
+	find . | grep '\.c$$\|\.h$$' | xargs grep -v '^[[:space:]]*$$' | wc -l

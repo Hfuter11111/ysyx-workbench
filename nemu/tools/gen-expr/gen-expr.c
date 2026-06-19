@@ -57,7 +57,7 @@ void gen_space() {
   }
 }
 
-// 如果生成的数超过剩余空间则不写入
+// 如果生成的数超过剩余空间则不更新 buf_index
 void gen_num() {
   uint32_t num = choose(100);
   int len = snprintf(buf+buf_index, get_remain(), "%uu", num); // 自动加'\0'，返回值为格式化后字符串长度，%uu 存入的是[0-9]+u,u表示该常量为无符号数，
@@ -142,7 +142,8 @@ int main(int argc, char *argv[]) {
     assert(fp != NULL);
     fputs(code_buf, fp);
     fclose(fp);
-
+    
+    // 编译成功返回0,编译失败则跳过这个表达式
     int ret = system("gcc /tmp/.code.c -o /tmp/.expr");
     if (ret != 0) {
       continue;
