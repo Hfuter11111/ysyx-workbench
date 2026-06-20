@@ -1,0 +1,5 @@
+top=encode42
+
+en SW0
+x (SW4, SW3, SW2, SW1)
+y (LD2, LD1)

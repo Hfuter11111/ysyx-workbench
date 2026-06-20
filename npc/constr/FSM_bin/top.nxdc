@@ -1,0 +1,8 @@
+top=FSM_bin
+
+clk BTNC
+reset SW0
+in SW1
+out LD0
+state_din (LD15, LD14, LD13, LD12)
+state_dout (LD7, LD6, LD5, LD4)
