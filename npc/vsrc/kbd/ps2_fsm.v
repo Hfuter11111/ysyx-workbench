@@ -39,8 +39,12 @@ always @(posedge clk) begin
                 cur_scan <= data;
                 key_count <= key_count + 1;
             end
+            // 由于即使press时接收到了F0也不一定说明释放了，所以这里press不需
+            // 要处理，若收到F0则跳到s_break，交给s_break处理
             s_break: begin
-                cur_scan <= 8'h0; //释放清零
+                if (data != 8'hF0) begin
+                    cur_scan <= 8'h00; // 确认收到释放键码后再清零
+                end
             end
             default: ;
         endcase

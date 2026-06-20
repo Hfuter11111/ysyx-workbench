@@ -3,20 +3,22 @@ module top(
     input clk, rst, dir
 );
     wire [7:0] dout;
-    shift_register s1(dout, clk, rst, dir);
+    shift_register s1(dout, clk, rst);
     bcd7seg b1(dout[3:0], h1);
     bcd7seg b2(dout[7:4], h2);
 endmodule
 
 module shift_register #(parameter WIDTH = 8) (
     output [WIDTH-1:0] dout,
-    input clk, rst, dir
+    input clk, rst
 );
     //复位时置数8‘b00000001
-    //测试时应令dir=1,右移
     wire din;
     wire [WIDTH-1:0] date;
+
     assign din = dout[4] ^ dout[3] ^ dout[2] ^ dout[0];
+    assign date = {din,dout[7:1]};
+
     Reg #(1, 1) r0 (clk, rst, date[0], dout[0], 1);
     Reg #(1, 0) r1 (clk, rst, date[1], dout[1], 1);
     Reg #(1, 0) r2 (clk, rst, date[2], dout[2], 1);
@@ -25,11 +27,7 @@ module shift_register #(parameter WIDTH = 8) (
     Reg #(1, 0) r5 (clk, rst, date[5], dout[5], 1);
     Reg #(1, 0) r6 (clk, rst, date[6], dout[6], 1);
     Reg #(1, 0) r7 (clk, rst, date[7], dout[7], 1);
-
-    MuxKey #(2, 1, 8) i0 (date, dir, {
-        1'b0, {dout[6:0],din},
-        1'b1, {din,dout[7:1]}
-    });
+    
 endmodule
 
 module bcd7seg(

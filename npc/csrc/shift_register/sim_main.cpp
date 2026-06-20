@@ -1,10 +1,10 @@
-#include "Vshift_register.h"
+#include "Vshift_register_s.h"
 #include "nvboard.h"
 #include "verilated.h"
 
-void nvboard_bind_all_pins(Vshift_register*);
+void nvboard_bind_all_pins(Vshift_register_s*);
 
-static Vshift_register dut;
+static Vshift_register_s dut;
 
 int main(int argc, char* argv[]){
     nvboard_bind_all_pins(&dut);

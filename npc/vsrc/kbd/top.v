@@ -10,7 +10,7 @@ wire [7:0] asc;
 wire [7:0] data;
 wire nextdata_n;
 
-assign nextdata_n = ~ready;
+assign nextdata_n = ~ready; // // 本设计中FSM每个clk周期都能处理一个扫描码，所以采用ready高时自动读走的简化写法。
 
 ps2_keyboard inst(
     .clk(clk),

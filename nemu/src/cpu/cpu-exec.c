@@ -43,7 +43,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 
 // 在Kconfig中自己添加配置，根据是否选择来决定CONFIG_WATCHPOINT是否被定义
 #ifdef CONFIG_WATCHPOINT
-  if(check_watchpoints()) {
+  if(check_watchpoints() && nemu_state.state == NEMU_RUNNING) {
     nemu_state.state = NEMU_STOP;
   }
 #endif
