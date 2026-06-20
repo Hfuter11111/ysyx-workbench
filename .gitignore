@@ -1,18 +1,64 @@
-*.*
-*
-!*/
-!/nemu/*
-!/nexus-am/*
-!/nanos-lite/*
-!/navy-apps/*
-!/npc/*
-!Makefile
-!README.md
-!.gitignore
-!init.sh
-/fceux-am
-/am-kernels
-/nvboard
+# ===== editor / OS =====
+.vscode/
+.idea/
+.kiro/
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo
+*.bak
+.gitignoo
+
+# ===== logs =====
+*.log
+log.txt
+
+# ===== large tools / third-party directories =====
+# 这些一般不用放进自己的 GitHub 仓库
 oss-cad-suite/
+fceux-am/
+am-kernels/
+nvboard/
+
+# ===== common build outputs =====
+**/build/
+**/obj_dir/
+**/out/
+**/result/
+**/.cache/
+compile_commands.json
+
+# ===== object / binary / wave files =====
+*.o
+*.d
+*.a
+*.so
+*.elf
+*.bin
+*.out
+*.exe
+*.vcd
+*.fst
+*.gtkw
+*.dump
+*.trace
+
+# ===== NEMU generated files =====
+nemu/.config
+nemu/.config.old
+nemu/include/config/
+nemu/include/generated/
+nemu/tools/gen-expr/gen-expr
+nemu/tools/capstone/repo/
+nemu/input
+nemu/grep
+
+# ===== NPC / Verilator / Yosys generated files =====
+npc/build/
 npc/obj_dir/
-docs/
+npc/vsrc/**/.yosys_show*.dot
+npc/vsrc/**/*.rtlil
+npc/vsrc/**/*.json
+npc/vsrc/**/netlist.v
+npc/vsrc/**/cell.lib
