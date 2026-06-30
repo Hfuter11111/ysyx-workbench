@@ -43,6 +43,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
 
 // 在Kconfig中自己添加配置，根据是否选择来决定CONFIG_WATCHPOINT是否被定义
 #ifdef CONFIG_WATCHPOINT
+  // bug记录：一开始并没有加nemu_state.state == NEMU_RUNNING，ebreak指令使nemu_state.state变为NEMU_END，但是如果将pc设为监视点，pc变化导至nemu_state.state被覆盖为NEMU_STOP,从而可以继续单步执行导致识别到不合法指令从而报错，监视点检查应该在为RUNNING状态下才能起作用
   if(check_watchpoints() && nemu_state.state == NEMU_RUNNING) {
     nemu_state.state = NEMU_STOP;
   }

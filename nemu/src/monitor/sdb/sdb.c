@@ -49,7 +49,7 @@ static int cmd_c(char *args) {
 
 
 static int cmd_q(char *args) {
-  nemu_state.state = NEMU_QUIT; //如果没有这一行，nemu_state没有被赋值，is_exit_status_bad()这个函数没有匹配到END或quit状态，故main最终返回为1,而返回1就会报错（约定） 
+  nemu_state.state = NEMU_QUIT; //如果没有这一行，nemu_state还是被初始化的时候的NEMU_STOP,没有被赋值为NEMU_QUIT，is_exit_status_bad()这个函数没有匹配到END或quit状态，故main最终返回为1,而返回1就会报错（约定） 
   return -1;
 }
 
@@ -100,7 +100,7 @@ static int cmd_x(char *args) {
     return 0;
   }
 
-  while (*EXPR == ' ') EXPR++;
+  while (*EXPR == ' ') EXPR++; // 把表达式前边的空格去掉
 
   if (*EXPR == '\0') {
     printf("Usage: x N EXPR\n");

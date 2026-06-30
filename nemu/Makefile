@@ -63,8 +63,8 @@ else
 include $(NEMU_HOME)/scripts/native.mk
 endif
 
+# -E 扩展正则 \.就是普通的.
 count:
-	find . | grep '\.c$$\|\.h$$' | xargs wc -l
-
+	find . -name "*.c" -o -name "*.h" | xargs wc -l
 count-nonblank:
-	find . | grep '\.c$$\|\.h$$' | xargs grep -v '^[[:space:]]*$$' | wc -l
+	find . -name "*.c" -o -name "*.h" | xargs grep -v '^[[:space:]]*$$' | wc -l
