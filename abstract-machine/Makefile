@@ -46,8 +46,10 @@ endif
 
 ### Extract instruction set architecture (`ISA`) and platform from `$ARCH`. Example: `ARCH=x86_64-qemu -> ISA=x86_64; PLATFORM=qemu`
 ## 拆分架构名
-ARCH_SPLIT = $(subst -, ,$(ARCH)) ## $(subst 原字符串,新字符串,目标文本)x86_64-qemu -> x86_64 qemu
-ISA        = $(word 1,$(ARCH_SPLIT)) ## word 1 表示取第一个单词, ISA = x86_64
+## $(subst 原字符串,新字符串,目标文本)x86_64-qemu -> x86_64 qemu
+ARCH_SPLIT = $(subst -, ,$(ARCH)) 
+## word 1 表示取第一个单词, ISA = x86_64
+ISA        = $(word 1,$(ARCH_SPLIT))
 PLATFORM   = $(word 2,$(ARCH_SPLIT))
 
 ### Check if there is something to build

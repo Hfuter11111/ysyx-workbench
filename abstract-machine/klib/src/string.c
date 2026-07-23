@@ -58,9 +58,9 @@ int strcmp(const char *s1, const char *s2) {
   return (unsigned char)s1[i] - (unsigned char)s2[i];
 }
 
-int strncmp(zconst char *s1, const char *s2, size_t n) {
+int strncmp(const char *s1, const char *s2, size_t n) {
   size_t i = 0;
-  while(i < n && i < s1[i] != '\0' && s1[i] == s2[i]) {
+  while(i < n && s1[i] != '\0' && s1[i] == s2[i]) {
     i++;
   }
 
@@ -68,13 +68,16 @@ int strncmp(zconst char *s1, const char *s2, size_t n) {
     return 0;
   }
 
-  return (unsigned char)s1[i] - (unsigned char)s2[i];
+  return (int)((unsigned char)s1[i] - (unsigned char)s2[i]);
 } 
 
 void *memset(void *s, int c, size_t n) {
   size_t i = 0;
+  unsigned char *s_ = (unsigned char *)s;
+  unsigned char value = (unsigned char)c;
   while(i < n) {
-    s[i] = c;
+    s_[i] = value;
+    i++;
   }
 
   return s;
@@ -117,7 +120,19 @@ void *memcpy(void *out, const void *in, size_t n) {
 }
 
 int memcmp(const void *s1, const void *s2, size_t n) {
-  panic("Not implemented");
+  size_t i = 0;
+  const unsigned char *s1_ = (const unsigned char *)s1;
+  const unsigned char *s2_ = (const unsigned char *)s2;
+  while(i < n && s1_[i] == s2_[i]) {
+    i++;
+  }
+
+  if(i == n) {
+    return 0;
+  }
+
+  return (int)(s1_[i] - s2_[i]);
+
 }
 
 #endif
