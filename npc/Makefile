@@ -20,6 +20,10 @@ VSRCS = $(abspath ./vsrc/$(MODULE)/*.v)
 CSRCS = $(abspath ./csrc/$(MODULE)/sim_main.cpp)
 CSRCS += $(SRC_AUTO_BIND)
 
+VSIM_CSRCS = $(abspath ./csrc/$(MODULE)/sim_main.cpp)
+VSIM_OBJ_DIR = $(BUILD_DIR)/vsim_obj_dir
+VSIM_BIN = $(BUILD_DIR)/$(TOPNAME)_vsim
+
 include $(NVBOARD_HOME)/scripts/nvboard.mk
 
 INCFLAGS = $(addprefix -I, $(INC_PATH))
@@ -39,10 +43,23 @@ sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@$(BIN)
 
+vsim: $(VSRCS) $(VSIM_CSRCS)
+	@rm -rf $(VSIM_OBJ_DIR)
+	@mkdir -p $(BUILD_DIR)
+	$(VERILATOR) $(VERILATOR_CFLAGS) \
+		--top-module $(TOPNAME) \
+		$(VSRCS) $(VSIM_CSRCS) \
+		--Mdir $(VSIM_OBJ_DIR) \
+		--exe \
+		-o $(abspath $(VSIM_BIN))
+
+	@$(VSIM_BIN)
+
 Lint:
 	verilator --lint-only -Wall $(VSRCS)
 
 clean: 
 	rm -rf $(BUILD_DIR)
+
 include ../Makefile
 
