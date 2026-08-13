@@ -6,6 +6,7 @@ module EXU #(parameter DATA_WIDTH = 32) (
     input [DATA_WIDTH-1:0] imm_U,
     input [1:0] imm_type,
     input src2_imm,
+    input src1_0,
     output [DATA_WIDTH-1:0] alu_result,
     output [DATA_WIDTH-1:0] jalr_target  
 );
@@ -29,7 +30,7 @@ module EXU #(parameter DATA_WIDTH = 32) (
     end
 
     // 操作数选择器
-    assign operand_a = rdata1;
+    assign operand_a = src1_0 ? {DATA_WIDTH{1'b0}} : rdata1;
     assign operand_b = src2_imm ? imm : rdata2;
 
     // 一个alu加法器，一个jalr跳转目标加法器

@@ -1,0 +1,81 @@
+	.file	"a.c"
+	.option nopic
+	.attribute arch, "rv32i2p1_m2p0"
+	.attribute unaligned_access, 0
+	.attribute stack_align, 16
+	.text
+	.align	2
+	.globl	f1
+	.type	f1, @function
+f1:
+	addi	sp,sp,-32
+	sw	s0,28(sp)
+	addi	s0,sp,32
+	sw	a0,-20(s0)
+	sw	a1,-24(s0)
+	lw	a4,-20(s0)
+	lw	a5,-24(s0)
+	sgt	a5,a4,a5
+	andi	a5,a5,0xff
+	mv	a0,a5
+	lw	s0,28(sp)
+	addi	sp,sp,32
+	jr	ra
+	.size	f1, .-f1
+	.align	2
+	.globl	f2
+	.type	f2, @function
+f2:
+	addi	sp,sp,-32
+	sw	s0,28(sp)
+	addi	s0,sp,32
+	sw	a0,-20(s0)
+	sw	a1,-24(s0)
+	lw	a4,-20(s0)
+	lw	a5,-24(s0)
+	slt	a5,a4,a5
+	andi	a5,a5,0xff
+	mv	a0,a5
+	lw	s0,28(sp)
+	addi	sp,sp,32
+	jr	ra
+	.size	f2, .-f2
+	.align	2
+	.globl	f3
+	.type	f3, @function
+f3:
+	addi	sp,sp,-32
+	sw	s0,28(sp)
+	addi	s0,sp,32
+	sw	a0,-20(s0)
+	sw	a1,-24(s0)
+	lw	a4,-20(s0)
+	lw	a5,-24(s0)
+	slt	a5,a4,a5
+	seqz	a5,a5
+	andi	a5,a5,0xff
+	mv	a0,a5
+	lw	s0,28(sp)
+	addi	sp,sp,32
+	jr	ra
+	.size	f3, .-f3
+	.align	2
+	.globl	f4
+	.type	f4, @function
+f4:
+	addi	sp,sp,-32
+	sw	s0,28(sp)
+	addi	s0,sp,32
+	sw	a0,-20(s0)
+	sw	a1,-24(s0)
+	lw	a4,-20(s0)
+	lw	a5,-24(s0)
+	sgt	a5,a4,a5
+	seqz	a5,a5
+	andi	a5,a5,0xff
+	mv	a0,a5
+	lw	s0,28(sp)
+	addi	sp,sp,32
+	jr	ra
+	.size	f4, .-f4
+	.ident	"GCC: (13.2.0-11ubuntu1+12) 13.2.0"

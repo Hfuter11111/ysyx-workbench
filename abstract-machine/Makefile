@@ -79,8 +79,9 @@ ARCHIVE   = $(WORK_DIR)/build/$(NAME)-$(ARCH).a
 OBJS      = $(addprefix $(DST_DIR)/, $(addsuffix .o, $(basename $(SRCS))))
 ## 依赖库
 LIBS     := $(sort $(LIBS) am klib) # lazy evaluation ("=") causes infinite recursions
-## 延迟计算将导致无限递归，故要立即计算
+## 延迟计算将导致无限递归，故要立即计算,sort的作用：按字典顺序排序并删除重复项。这句话是指在libs变量后面加入am和klib库，并去重排序。
 ## 初始链接内容
+## LINKAGE 变量保存了所有需要链接的目标文件和库文件，最终会被链接器使用。
 LINKAGE   = $(OBJS)  # library archives are added by LIB_TEMPLATE below
 
 ## 3. General Compilation Flags
@@ -104,7 +105,7 @@ INCFLAGS += $(addprefix -I, $(INC_PATH))
 ARCH_H := arch/$(ARCH).h
 ## 裸机编译参数
 ## 如果ARCH为riscv64-nemu
-## 那么有如下宏定义：define __ISA__ riscv64 define __IAS_RISCV64__ 
+## 那么有如下宏定义：define __ISA__ "riscv64" define __IAS_RISCV64__ 
 ## define __ARCH__ riscv64-nemu define __ARCH__ RISCV64_NEMU
 ## define __PLATFORM__ nemu define __PLATFORM_NEMU
 CFLAGS   += -O2 -MMD -Wall -Werror $(INCFLAGS) \

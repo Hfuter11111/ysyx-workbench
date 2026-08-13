@@ -43,7 +43,7 @@ sim: $(BIN)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@$(BIN)
 
-vsim: $(VSRCS) $(VSIM_CSRCS)
+$(VSIM_BIN): $(VSRCS) $(VSIM_CSRCS)
 	@rm -rf $(VSIM_OBJ_DIR)
 	@mkdir -p $(BUILD_DIR)
 	$(VERILATOR) $(VERILATOR_CFLAGS) \
@@ -53,7 +53,8 @@ vsim: $(VSRCS) $(VSIM_CSRCS)
 		--exe \
 		-o $(abspath $(VSIM_BIN))
 
-	@$(VSIM_BIN)
+run: $(VSIM_BIN)
+	@$(VSIM_BIN) $(IMG)
 
 Lint:
 	verilator --lint-only -Wall $(VSRCS)

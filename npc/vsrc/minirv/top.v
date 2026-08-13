@@ -22,11 +22,15 @@ module top #(parameter ADDR_WIDTH = 5, DATA_WIDTH = 32, RESET_PC = 32'h00000000)
     wire [DATA_WIDTH-1:0] imm_U;
 
     // 控制信号
+    wire [2:0] funct3;
     wire [1:0] imm_type;
     wire       jalr;
     wire       src2_imm;
+    wire       src1_0;
     wire       reg_wb;
     wire [1:0] wb_sel;
+    wire       mem_valid;
+    wire       mem_wirte;
     wire       is_ebreak;
 
     // 寄存器堆数据
@@ -36,6 +40,9 @@ module top #(parameter ADDR_WIDTH = 5, DATA_WIDTH = 32, RESET_PC = 32'h00000000)
     // 执行结果
     wire [DATA_WIDTH-1:0] alu_result;
     wire [DATA_WIDTH-1:0] jalr_target;
+
+    // 访存相关
+    wire [DATA_WIDTH-1:0] rdata;
 
     // 写回数据
     wire [DATA_WIDTH-1:0] wb_data;
@@ -56,6 +63,7 @@ module top #(parameter ADDR_WIDTH = 5, DATA_WIDTH = 32, RESET_PC = 32'h00000000)
         .DATA_WIDTH(DATA_WIDTH /* default 32 */)
      ) idu (
         .inst       (inst),
+        .funct3     (funct3),
         .rd         (rd),
         .rs1        (rs1),
         .rs2        (rs2),
@@ -65,8 +73,11 @@ module top #(parameter ADDR_WIDTH = 5, DATA_WIDTH = 32, RESET_PC = 32'h00000000)
         .imm_type   (imm_type),
         .jalr       (jalr),
         .src2_imm   (src2_imm),
+        .src1_0     (src1_0),
         .reg_wb     (reg_wb),
         .wb_sel     (wb_sel),
+        .mem_valid  (mem_valid),       
+        .mem_write  (mem_wirte),           
         .is_ebreak  (is_ebreak) 
     );
 
@@ -76,18 +87,17 @@ module top #(parameter ADDR_WIDTH = 5, DATA_WIDTH = 32, RESET_PC = 32'h00000000)
     end
 
     RegisterFile #(
-        .ADDR_WIDTH(ADDR_WIDTH /* default 4 */),
         .DATA_WIDTH(DATA_WIDTH /* default 32 */)
      ) registerFile (
         .clk        (clk),
         .wdata      (wb_data),
-        .waddr      (rd),
+        .waddr      (rd[3:0]),
         .wen        (reg_wb),
-        .raddr1     (rs1),
-        .raddr2     (rs2),
+        .raddr1     (rs1[3:0]),
+        .raddr2     (rs2[3:0]),
         .rdata1     (rdata1),
         .rdata2     (rdata2),
-        .debug_addr (debug_reg_addr),
+        .debug_addr (debug_reg_addr[3:0]),
         .debug_data (debug_reg_data)
     );
 
@@ -101,18 +111,33 @@ module top #(parameter ADDR_WIDTH = 5, DATA_WIDTH = 32, RESET_PC = 32'h00000000)
         .imm_U      (imm_U),
         .imm_type   (imm_type),
         .src2_imm   (src2_imm),
+        .src1_0     (src1_0),
         .alu_result (alu_result),
         .jalr_target(jalr_target)
+    );
+  
+    LSU #(
+        .DATA_WIDTH(DATA_WIDTH /* default 32 */)
+     ) lsu (
+        .waddr(alu_result),
+        .raddr(alu_result),
+        .wdata(rdata2),
+        .valid(mem_valid),
+        .wen  (mem_wirte),
+        .funct3(funct3),
+        .rdata(rdata)
     );
 
     WBU #(
         .DATA_WIDTH(DATA_WIDTH /* default 32 */)
      ) wbu (
+        .rdata      (rdata),
         .alu_result (alu_result),
         .jalr_target(jalr_target),
         .snpc       (snpc),
         .wb_sel     (wb_sel),
         .jalr       (jalr),
+        .funct3     (funct3),
         .wb_data    (wb_data),
         .dnpc       (dnpc)
     );
